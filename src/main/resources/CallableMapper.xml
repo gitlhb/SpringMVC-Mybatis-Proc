@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tt.repository.CallableMapper">
+
+    <select id="callProc" statementType="CALLABLE" parameterType="java.util.Map">
+		 {call sp_getDeptNameById(
+              #{id,jdbcType=VARCHAR,javaType=String,mode=INOUT},
+              #{parent_dept_id,jdbcType=VARCHAR, javaType=String, mode=INOUT},
+              #{name,jdbcType=VARCHAR, javaType=String, mode=OUT}
+      ) }
+	</select>
+    <resultMap id="myResultMap" type="com.tt.entity.DeptInfo">
+        <id column="dept_id" property="deptId" javaType="String" jdbcType="VARCHAR"></id>
+        <result column="dept_name" property="detpName"></result>
+        <result column="parent_dept_id" property="parentDeptId"></result>
+        <result column="desc" property="desc"></result>
+        <result column="location" property="location"></result>
+        <result column="dt_create" property="dtCreate"></result>
+        <result column="dt_update" property="dtUpdate"></result>
+    </resultMap>
+
+    <!--
+    存储过程代码:
+    DROP PROCEDURE IF EXISTS sp_getResultSet;
+CREATE PROCEDURE sp_getResultSet(in parId VARCHAR(10))
+BEGIN
+	SELECT * FROM t_dept t WHERE t.parent_dept_id=parId;
+END;
+
+SET @parId='-1';
+CALL sp_getResultSet(@parId);
+
+    -->
+    <select id="callProc1" statementType="CALLABLE" parameterType="java.util.Map" resultMap="myResultMap">
+        {call sp_getResultSet(
+        #{parId,jdbcType=VARCHAR,javaType=String,mode=IN}
+        ) }
+    </select>
+
+    <select id="callProc2" statementType="CALLABLE" parameterType="java.util.Map" resultMap="myResultMap">
+        {call prc_page_result(
+         #{currpage,jdbcType=TINYINT,javaType=Integer,mode=IN},
+         #{columns,jdbcType=VARCHAR,javaType=String,mode=IN},
+         #{tablename,jdbcType=VARCHAR,javaType=String,mode=IN},
+         #{sCondition,jdbcType=VARCHAR,javaType=String,mode=IN},
+         #{order_field,jdbcType=VARCHAR,javaType=String,mode=IN},
+         #{asc_field,jdbcType=TINYINT,javaType=Integer,mode=IN},
+         #{primary_field,jdbcType=VARCHAR,javaType=String,mode=IN},
+         #{pagesize,jdbcType=TINYINT,javaType=Integer,mode=IN}
+        ) }
+    </select>
+
+    <select id="callProc3" statementType="CALLABLE" parameterType="java.util.Map" resultMap="myResultMap">
+        <![CDATA[  {call sp_viewPage(
+        #{fields,jdbcType=VARCHAR,javaType=String,mode=IN},
+        #{tables,jdbcType=VARCHAR,javaType=String,mode=IN},
+        #{wher,jdbcType=VARCHAR,javaType=String,mode=IN},
+        #{orderby,jdbcType=VARCHAR,javaType=String,mode=IN},
+        #{pageindex,jdbcType=TINYINT,javaType=Integer,mode=IN},
+        #{pageSize,jdbcType=TINYINT,javaType=Integer,mode=IN},
+        #{totalcount,jdbcType=TINYINT,javaType=Integer,mode=OUT},
+        #{pagecount,jdbcType=TINYINT,javaType=Integer,mode=OUT}
+        ) }]]>
+    </select>
+
+
+    <select id="selectCount" parameterType="String" resultType="Integer">
+       SELECT  COUNT(*)  FROM  t_dept
+    </select>
+
+    <select id="delDept">
+       DELETE  FROM t_dept WHERE dept_id in(${ids})
+    </select>
+
+    <insert id="addDept"  useGeneratedKeys="true" keyProperty="deptId" parameterType="com.tt.entity.AddDept">
+        INSERT  INTO t_dept(dept_name,parent_dept_id,`desc`,location,dt_create,dt_update)
+        VALUE (#{deptName},#{parentDeptId},#{desc},#{location},#{dtCreate},#{dtUpdate})
+    </insert>
+</mapper>
